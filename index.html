@@ -256,8 +256,7 @@ body{padding-block:4px}
         <button class="sheet-x" id="sheetX" type="button" aria-label="Close">✕</button>
       </div>
       <p class="sheet-hint" id="sheetHint"></p>
-      <iframe id="sheetForm" title="Log it" loading="lazy"></iframe>
-      <a class="sheet-open" id="sheetOpen" href="https://clever-field-b63.notion.site/5bfcb10949dd4ef18ee1e693e91ba302?v=406fed941fec81fa8cee000c664d1423" target="_blank" rel="noopener">Form not showing? Open it here →</a>
+            <a class="sheet-open" id="sheetOpen" href="https://clever-field-b63.notion.site/5bfcb10949dd4ef18ee1e693e91ba302?v=406fed941fec81fa8cee000c664d1423" target="_blank" rel="noopener">Or open the log form →</a>
     </div>
   </div>
   <div class="note" id="note"></div>
@@ -406,8 +405,7 @@ body{padding-block:4px}
     if(!on) return;
     const work = /Workout/.test(msg);
     $("sheetTitle").textContent = work ? "What was your workout?" : "What did you do for fun?";
-    $("sheetHint").textContent = work ? "Pick Workout, say what you did and how many minutes, then Submit." : "Pick Fun, say what you did (cheesecake counts), then Submit.";
-    const f = $("sheetForm"); if(f.getAttribute("src") !== FORM_URL) f.setAttribute("src", FORM_URL);
+    $("sheetHint").textContent = work ? "Tap the Log workout button right under the climber, type what you did and how many minutes, then close it." : "Tap the Log fun button right under the climber and type what you did (cheesecake counts), then close it.";
     setTimeout(()=>{ $("sheet").hidden = false; $("sheetX").focus(); }, 700);
   }
   function closeSheet(){ $("sheet").hidden = true; }
