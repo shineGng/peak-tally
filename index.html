@@ -257,7 +257,7 @@ body{padding-block:4px}
       </div>
       <p class="sheet-hint" id="sheetHint"></p>
       <iframe id="sheetForm" title="Log it" loading="lazy"></iframe>
-      <a class="sheet-open" id="sheetOpen" href="https://app.notion.com/p/5bfcb10949dd4ef18ee1e693e91ba302?v=406fed941fec81fa8cee000c664d1423" target="_blank" rel="noopener">Form not showing? Open it here →</a>
+      <a class="sheet-open" id="sheetOpen" href="https://clever-field-b63.notion.site/5bfcb10949dd4ef18ee1e693e91ba302?v=406fed941fec81fa8cee000c664d1423" target="_blank" rel="noopener">Form not showing? Open it here →</a>
     </div>
   </div>
   <div class="note" id="note"></div>
@@ -400,7 +400,7 @@ body{padding-block:4px}
   $("taskBtn").addEventListener("click", ()=>change(d=>{d.tasks+=1; return d;}, $("taskBtn"), "--red"));
   $("workBtn").addEventListener("click", ()=>{ const on = !get(todayKey()).workout; change(d=>{d.workout=on; return d;}, on ? $("workBtn") : null, "--jade"); askLog(on, "Workout done. Log what you did and how long, just below ↓"); });
   $("funBtn").addEventListener("click", ()=>{ const on = !get(todayKey()).fun; change(d=>{d.fun=on; return d;}, on ? $("funBtn") : null, "--pink"); askLog(on, "Nice. Log what you did for fun, just below ↓"); });
-  const FORM_URL = "https://app.notion.com/p/5bfcb10949dd4ef18ee1e693e91ba302?v=406fed941fec81fa8cee000c664d1423";
+  const FORM_URL = "https://clever-field-b63.notion.site/5bfcb10949dd4ef18ee1e693e91ba302?v=406fed941fec81fa8cee000c664d1423";
   function askLog(on, msg){
     $("ask").textContent = ""; $("ask").classList.remove("show");
     if(!on) return;
