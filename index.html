@@ -1,0 +1,384 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*,*::before,*::after{box-sizing:border-box}html{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Peak Tally</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Noto+Serif+HK:wght@600&display=swap">
+<style>
+/* Layout: one Victoria Peak scene on top, three buttons under it, a week strip below.
+   Neon red (tasks), harbour jade (workout), neon pink (fun); the Peak at dusk / night. */
+:root{
+  --bg:#f7f3f1;
+  --ink:#231c1f;
+  --muted:#7c6f74;
+  --line:#e7dcdc;
+  --red:#d9342b; --red-deep:#a8221b; --red-glow:rgba(217,52,43,.28);
+  --jade:#1d8a6e; --jade-deep:#136650; --jade-glow:rgba(29,138,110,.26);
+  --pink:#d6457f; --pink-deep:#a82d5f; --pink-glow:rgba(214,69,127,.28);
+  --dot-off:#e8dfdf;
+  --sky-top:#f3b99a; --sky-low:#fde6d6;
+  --far:#c7a9b6; --water:#c9b3c4; --water-hi:#e8d6df;
+  --hill:#5f4a5c; --hill-shade:#4e3b4c; --hill-far:#8a7085;
+  --city:#45333f; --city-far:#9c8292;
+  --window:#ffd27a; --trail:#f6e2d3; --hiker:#ffffff; --tower:#efe6ea;
+  --display:"Bricolage Grotesque",ui-rounded,"SF Pro Rounded",system-ui,sans-serif;
+  --han:"Noto Serif HK","Songti TC","PMingLiU",serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#191416;--ink:#f6ecec;--muted:#a9989d;--line:#3a2f33;
+  --red:#ff4d42;--red-deep:#c2281f;--red-glow:rgba(255,77,66,.40);
+  --jade:#3cc39d;--jade-deep:#1f8f70;--jade-glow:rgba(60,195,157,.34);
+  --pink:#ff6fae;--pink-deep:#c43d7b;--pink-glow:rgba(255,111,174,.38);
+  --dot-off:#3a2f33;
+  --sky-top:#0f1430;--sky-low:#33264a;--far:#2a2342;--water:#171a33;--water-hi:#2c3360;
+  --hill:#1a1424;--hill-shade:#120d19;--hill-far:#251d33;
+  --city:#0e0a14;--city-far:#211a33;--window:#ffcf6b;--trail:#5e4d68;--hiker:#ffffff;--tower:#d9d2e6;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#191416;--ink:#f6ecec;--muted:#a9989d;--line:#3a2f33;
+  --red:#ff4d42;--red-deep:#c2281f;--red-glow:rgba(255,77,66,.40);
+  --jade:#3cc39d;--jade-deep:#1f8f70;--jade-glow:rgba(60,195,157,.34);
+  --pink:#ff6fae;--pink-deep:#c43d7b;--pink-glow:rgba(255,111,174,.38);
+  --dot-off:#3a2f33;
+  --sky-top:#0f1430;--sky-low:#33264a;--far:#2a2342;--water:#171a33;--water-hi:#2c3360;
+  --hill:#1a1424;--hill-shade:#120d19;--hill-far:#251d33;
+  --city:#0e0a14;--city-far:#211a33;--window:#ffcf6b;--trail:#5e4d68;--hiker:#ffffff;--tower:#d9d2e6;color-scheme:dark}
+
+body{background:var(--bg);color:var(--ink);font-family:var(--display);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px}
+.wrap{display:flex;flex-direction:column;align-items:center;gap:12px;max-width:600px;margin:0 auto;text-align:center}
+
+.scene{width:100%;max-width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;border:1px solid var(--line)}
+.scene svg{display:block;width:100%;height:100%}
+.wp{fill:var(--trail);transition:fill .3s ease}
+.wp.task{fill:var(--red)} .wp.work{fill:var(--jade)} .wp.fun{fill:var(--pink)}
+#flag{transition:opacity .4s ease, transform .5s cubic-bezier(.2,1.6,.4,1);transform-origin:center bottom;transform-box:fill-box}
+#flag.down{opacity:0;transform:scaleY(0)}
+.lit rect{fill:var(--window)}
+
+.status{display:flex;flex-direction:column;align-items:center;gap:2px}
+.count{font-variant-numeric:tabular-nums;font-weight:800;font-size:1.4rem}
+.count.bump{animation:bump .42s cubic-bezier(.2,1.6,.4,1)}
+.sub{color:var(--muted);font-size:.86rem}
+
+.buttons{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn{position:relative;border:0;cursor:pointer;color:#fff;font-family:var(--display);font-weight:800;font-size:.98rem;
+  padding:11px 18px;border-radius:999px;display:inline-flex;align-items:center;gap:8px;
+  transition:transform .12s ease, opacity .2s ease;-webkit-tap-highlight-color:transparent}
+.btn .han{font-family:var(--han);font-weight:600;font-size:.9rem;opacity:.92}
+.btn.red{background:radial-gradient(circle at 30% 25%,var(--red),var(--red-deep));box-shadow:0 6px 18px var(--red-glow),inset 0 -4px 0 rgba(0,0,0,.15)}
+.btn.jade{background:radial-gradient(circle at 30% 25%,var(--jade),var(--jade-deep));box-shadow:0 6px 18px var(--jade-glow),inset 0 -4px 0 rgba(0,0,0,.15)}
+.btn.pink{background:radial-gradient(circle at 30% 25%,var(--pink),var(--pink-deep));box-shadow:0 6px 18px var(--pink-glow),inset 0 -4px 0 rgba(0,0,0,.15)}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:scale(.94)}
+.btn:focus-visible{outline:3px solid var(--ink);outline-offset:4px}
+.btn[aria-pressed="true"]{opacity:.8}
+
+.undo{background:none;border:0;color:var(--muted);font:inherit;font-size:.78rem;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:2px 6px}
+.undo:hover{color:var(--ink)}
+.undo[disabled]{opacity:.35;cursor:default;text-decoration:none}
+
+.week{display:flex;gap:10px;justify-content:center;margin-top:4px}
+.day{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.66rem;color:var(--muted);letter-spacing:.06em;padding:3px;border-radius:8px}
+.day.today{box-shadow:inset 0 0 0 1.5px var(--muted)}
+.trio{display:flex;flex-direction:column;gap:2px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--dot-off)}
+.dot.top{background:var(--red)} .dot.work{background:var(--jade)} .dot.fun{background:var(--pink)}
+.legend{color:var(--muted);font-size:.76rem;font-variant-numeric:tabular-nums;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.legend b{color:var(--ink)}
+.legend b.hit{color:var(--jade)}
+.key{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:1px}
+
+.spark{position:fixed;width:8px;height:8px;border-radius:50%;pointer-events:none;z-index:5}
+.note{color:var(--muted);font-size:.72rem;min-height:1em}
+
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.btn,.wp,#flag{transition:none}.count.bump{animation:none}}
+</style>
+
+<div class="wrap">
+  <div class="scene">
+    <svg viewBox="0 0 320 180" role="img" aria-labelledby="climbTitle">
+      <title id="climbTitle">A hiker climbing Victoria Peak toward the Peak Tower, with the Peak Tram, Victoria Harbour and the skyline below. Five tasks, one workout and one fun thing reach the top.</title>
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="var(--sky-top)"/><stop offset="1" stop-color="var(--sky-low)"/>
+        </linearGradient>
+        <path id="tramline" d="M168 170 L110 60"/>
+        <path id="ferryline" d="M318 165 L176 165"/>
+      </defs>
+      <rect width="320" height="180" fill="url(#sky)"/>
+      <!-- stars + moon -->
+      <g fill="var(--window)" opacity=".75">
+        <circle cx="22" cy="18" r=".9"/><circle cx="60" cy="10" r=".7"/><circle cx="150" cy="16" r="1"/>
+        <circle cx="196" cy="30" r=".7"/><circle cx="232" cy="12" r=".9"/><circle cx="300" cy="22" r=".8"/>
+      </g>
+      <circle cx="268" cy="30" r="8" fill="var(--window)" opacity=".85"/>
+      <circle cx="271" cy="27" r="7" fill="var(--sky-top)"/>
+
+      <!-- Kowloon side, across the harbour -->
+      <path d="M150 128 L180 120 L210 124 L250 112 L290 118 L320 110 L320 146 L150 146 Z" fill="var(--far)" opacity=".7"/>
+      <g fill="var(--city-far)">
+        <rect x="176" y="128" width="8" height="18"/><rect x="186" y="132" width="10" height="14"/><rect x="198" y="126" width="7" height="20"/>
+        <rect x="207" y="130" width="11" height="16"/><rect x="220" y="124" width="8" height="22"/><rect x="230" y="129" width="12" height="17"/>
+        <rect x="246" y="127" width="9" height="19"/><rect x="258" y="131" width="10" height="15"/>
+        <!-- ICC -->
+        <path d="M272 146 L272 82 L276 78 L280 82 L280 146 Z"/>
+        <rect x="284" y="128" width="9" height="18"/><rect x="295" y="124" width="11" height="22"/><rect x="308" y="130" width="12" height="16"/>
+      </g>
+      <g class="lit" opacity=".8">
+        <rect x="275" y="90" width="1.2" height="1.2"/><rect x="275" y="104" width="1.2" height="1.2"/><rect x="277" y="118" width="1.2" height="1.2"/>
+        <rect x="200" y="132" width="1.2" height="1.2"/><rect x="233" y="134" width="1.2" height="1.2"/><rect x="298" y="130" width="1.2" height="1.2"/>
+      </g>
+
+      <!-- Hong Kong Island skyline at the foot of the Peak -->
+      <g fill="var(--city)">
+        <rect x="150" y="128" width="10" height="34"/>
+        <!-- IFC -->
+        <path d="M164 162 L164 70 L166 64 L170 64 L172 70 L172 162 Z"/>
+        <path d="M165.5 64 L166.6 60 L169.4 60 L170.5 64 Z"/>
+        <rect x="175" y="122" width="10" height="40"/>
+        <!-- Bank of China Tower -->
+        <path d="M190 162 L190 84 L196 76 L201 70 L201 162 Z"/>
+        <line x1="201" y1="70" x2="201" y2="60" stroke="var(--city)" stroke-width="1"/>
+        <line x1="203" y1="70" x2="203" y2="62" stroke="var(--city)" stroke-width=".8"/>
+        <rect x="204" y="116" width="9" height="46"/>
+        <!-- Central Plaza -->
+        <path d="M216 162 L216 90 L220 86 L224 90 L224 162 Z"/>
+        <line x1="220" y1="86" x2="220" y2="76" stroke="var(--city)" stroke-width="1"/>
+        <rect x="227" y="126" width="12" height="36"/><rect x="241" y="118" width="9" height="44"/>
+        <rect x="252" y="132" width="13" height="30"/><rect x="267" y="124" width="10" height="38"/>
+        <rect x="279" y="136" width="14" height="26"/><rect x="295" y="128" width="10" height="34"/><rect x="307" y="134" width="13" height="28"/>
+      </g>
+      <g stroke="var(--sky-low)" stroke-width=".5" opacity=".35" fill="none">
+        <path d="M190 84 L201 96 M190 104 L201 116 M190 124 L201 136 M201 70 L190 84"/>
+      </g>
+      <g class="lit">
+        <rect x="167" y="78" width="1.3" height="1.3"/><rect x="167" y="96" width="1.3" height="1.3"/><rect x="169" y="114" width="1.3" height="1.3"/>
+        <rect x="167" y="134" width="1.3" height="1.3"/><rect x="193" y="96" width="1.3" height="1.3"/><rect x="196" y="122" width="1.3" height="1.3"/>
+        <rect x="219" y="100" width="1.3" height="1.3"/><rect x="219" y="124" width="1.3" height="1.3"/><rect x="230" y="134" width="1.3" height="1.3"/>
+        <rect x="244" y="128" width="1.3" height="1.3"/><rect x="270" y="132" width="1.3" height="1.3"/><rect x="298" y="140" width="1.3" height="1.3"/>
+        <rect x="155" y="138" width="1.3" height="1.3"/><rect x="179" y="134" width="1.3" height="1.3"/><rect x="208" y="130" width="1.3" height="1.3"/>
+      </g>
+      <!-- neon sign -->
+      <rect x="252" y="138" width="7" height="3" rx="1" fill="var(--pink)" opacity=".9"/>
+      <rect x="180" y="142" width="3" height="7" rx="1" fill="var(--red)" opacity=".9"/>
+
+      <!-- Victoria Harbour -->
+      <rect x="0" y="152" width="320" height="28" fill="var(--water)"/>
+      <g stroke="var(--water-hi)" stroke-width=".8" opacity=".7">
+        <line x1="180" y1="158" x2="196" y2="158"/><line x1="230" y1="170" x2="252" y2="170"/><line x1="282" y1="162" x2="296" y2="162"/>
+      </g>
+      <!-- Star Ferry -->
+      <g id="ferry">
+        <rect x="-8" y="-4" width="16" height="4" rx="1" fill="#2f7d5b"/>
+        <rect x="-6" y="-7" width="12" height="3" rx="1" fill="#f3efe6"/>
+      </g>
+      <!-- red-sail junk -->
+      <g transform="translate(296 172)">
+        <path d="M-7 0 L7 0 L5 3 L-5 3 Z" fill="var(--city)"/>
+        <path d="M-2 0 L-2 -12 Q3 -8 4 -1 Z" fill="var(--red)"/>
+        <path d="M-3 0 L-3 -9 Q-7 -6 -7 -1 Z" fill="var(--red)" opacity=".85"/>
+      </g>
+
+      <!-- Victoria Peak -->
+      <path d="M0 116 L24 98 L44 104 L62 80 L80 60 L92 46 L100 44 L112 54 L130 78 L150 104 L170 128 L182 180 L0 180 Z" fill="var(--hill-far)" opacity=".55"/>
+      <path d="M0 136 L20 120 L40 112 L58 92 L74 72 L88 54 L98 48 L106 52 L120 70 L140 98 L160 130 L176 180 L0 180 Z" fill="var(--hill)"/>
+      <path d="M106 52 L120 70 L140 98 L160 130 L176 180 L128 180 Z" fill="var(--hill-shade)"/>
+      <!-- Peak Tower (the "wok") -->
+      <g>
+        <rect x="95" y="41" width="2" height="8" fill="var(--tower)"/><rect x="103" y="41" width="2" height="8" fill="var(--tower)"/>
+        <rect x="93" y="44" width="14" height="5" fill="var(--tower)" opacity=".7"/>
+        <path d="M86 34 Q100 29 114 34 L109 41 L91 41 Z" fill="var(--tower)"/>
+        <rect x="91" y="38" width="18" height="1" fill="var(--window)" opacity=".8"/>
+      </g>
+      <!-- Peak Tram -->
+      <use href="#tramline" stroke="var(--trail)" stroke-width="1" opacity=".7"/>
+      <g id="tram"><rect x="-4" y="-2.5" width="8" height="5" rx="1" fill="var(--red)" transform="rotate(-62)"/><rect x="-2.6" y="-1.2" width="5.2" height="1.6" fill="var(--window)" transform="rotate(-62)"/></g>
+
+      <!-- hiking trail -->
+      <path id="trail" d="M8 172 C34 168 50 160 40 150 C30 140 62 136 70 126 C78 116 54 110 64 100 C74 90 86 92 80 80 C74 68 88 64 86 56 C85 51 88 48 92 46"
+            fill="none" stroke="var(--trail)" stroke-width="2" stroke-dasharray="3.5 3.5" stroke-linecap="round" opacity=".95"/>
+      <g id="wps"></g>
+      <g id="flag" class="down">
+        <line x1="90" y1="44" x2="90" y2="22" stroke="var(--hiker)" stroke-width="1.4"/>
+        <path d="M90 22 L106 26.5 L90 31 Z" fill="var(--red)"/>
+      </g>
+      <text id="summitText" x="66" y="20" fill="var(--hiker)" font-family="Noto Serif HK, serif" font-size="9" opacity="0">山頂</text>
+      <g id="hiker" transform="translate(8 172)">
+        <g transform="translate(0 -11)">
+          <rect x="-4.2" y="2.4" width="3.4" height="5" rx="1" fill="var(--red)"/>
+          <circle cx="0.6" cy="0" r="2.4" fill="var(--hiker)"/>
+          <path d="M0.6 2.4 L0.6 7.4 M0.6 4 L3.4 6 M0.6 7.4 L-1.4 11 M0.6 7.4 L2.8 11" stroke="var(--hiker)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+          <line x1="3.4" y1="6" x2="4.6" y2="11" stroke="var(--hiker)" stroke-width=".9"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <div class="status">
+    <span class="count" id="count" aria-live="polite">0 / 7</span>
+    <span class="sub" id="sub">5 tasks, 1 workout and 1 fun thing to reach the top</span>
+  </div>
+
+  <div class="buttons">
+    <button class="btn red" id="taskBtn" type="button"><span class="han" aria-hidden="true">完成</span>Task</button>
+    <button class="btn jade" id="workBtn" type="button" aria-pressed="false"><span class="han" aria-hidden="true">運動</span><span id="workLabel">Workout</span></button>
+    <button class="btn pink" id="funBtn" type="button" aria-pressed="false"><span class="han" aria-hidden="true">玩</span><span id="funLabel">Fun</span></button>
+  </div>
+  <button class="undo" id="undo" type="button" disabled>undo last task</button>
+
+  <div class="week" id="week" aria-hidden="true"></div>
+  <div class="legend" id="legend">
+    <span><i class="key" style="background:var(--red)"></i><b id="tops">0</b> summits</span>
+    <span><i class="key" style="background:var(--jade)"></i><b id="works">0 / 6</b> workouts</span>
+    <span><i class="key" style="background:var(--pink)"></i><b id="funs">0 / 7</b> fun</span>
+  </div>
+  <div class="note" id="note"></div>
+</div>
+
+<script>
+(function(){
+  const STOPS = 7, TASKS_NEEDED = 5, WORK_GOAL = 6, FUN_GOAL = 7, LS_KEY = "peak-tally-v1";
+  const days = {};
+  let col = null;
+  const $ = id => document.getElementById(id);
+  const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const pad = n => String(n).padStart(2,"0");
+  const key = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+  const todayKey = () => key(new Date());
+  function weekKeys(){
+    const now = new Date(), dow = (now.getDay()+6)%7;
+    return Array.from({length:7},(_,i)=>key(new Date(now.getFullYear(),now.getMonth(),now.getDate()-dow+i)));
+  }
+  const norm = v => ({tasks:Number(v && v.tasks)||0, workout:!!(v && v.workout), fun:!!(v && v.fun)});
+  const get = k => norm(days[k]);
+  // every tap moves him up; only the summit itself needs a workout and something fun
+  const climbed = d => Math.min(d.tasks + d.workout + d.fun, (d.workout && d.fun) ? STOPS : STOPS - 1);
+  const summited = d => d.workout && d.fun && d.tasks >= TASKS_NEEDED;
+
+  const trail = $("trail"), total = trail.getTotalLength(), wps = $("wps");
+  const pt = v => trail.getPointAtLength(total * Math.min(v,STOPS) / STOPS);
+  for(let i=1;i<=STOPS;i++){
+    const p = pt(i), c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    c.setAttribute("cx",p.x); c.setAttribute("cy",p.y); c.setAttribute("r", i===STOPS ? 3 : 2.3);
+    c.setAttribute("class","wp"); wps.append(c);
+  }
+  let shown = 0, anim = null;
+  const place = v => { const p = pt(v); $("hiker").setAttribute("transform", `translate(${p.x.toFixed(2)} ${p.y.toFixed(2)})`); };
+  function moveTo(target){
+    if(anim) cancelAnimationFrame(anim);
+    if(reduce || shown === target){ shown = target; place(shown); return; }
+    const from = shown, start = performance.now(), dur = 650;
+    const step = t => { const k = Math.min(1,(t-start)/dur), e = 1-Math.pow(1-k,3);
+      shown = from + (target-from)*e; place(shown); if(k<1) anim = requestAnimationFrame(step); };
+    anim = requestAnimationFrame(step);
+  }
+
+  // ambient: tram glides up and down, ferry crosses the harbour
+  const tramLine = document.getElementById("tramline"), tramLen = tramLine.getTotalLength();
+  const ferryLine = document.getElementById("ferryline"), ferryLen = ferryLine.getTotalLength();
+  function ambient(t){
+    const k = (Math.sin(t/7000)+1)/2, p = tramLine.getPointAtLength(tramLen*k);
+    $("tram").setAttribute("transform", `translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})`);
+    const f = (t/26000)%1, q = ferryLine.getPointAtLength(ferryLen*f);
+    $("ferry").setAttribute("transform", `translate(${q.x.toFixed(1)} ${q.y.toFixed(1)})`);
+    if(!reduce) requestAnimationFrame(ambient);
+  }
+  ambient(performance.now() + 9000);
+
+  function render(animate){
+    const t = get(todayKey()), c = climbed(t), top = summited(t);
+    // stops colour in order: workout, fun, then tasks
+    const kinds = [];
+    if(t.workout) kinds.push("work");
+    if(t.fun) kinds.push("fun");
+    while(kinds.length < c) kinds.push("task");
+    [...wps.children].forEach((el,i)=>{ el.classList.remove("task","work","fun"); if(i < c) el.classList.add(kinds[i]); });
+    if(animate) moveTo(c); else { if(anim) cancelAnimationFrame(anim); shown = c; place(c); }
+    $("flag").classList.toggle("down", !top);
+    $("summitText").setAttribute("opacity", top ? "1" : "0");
+    $("count").textContent = (t.tasks + t.workout + t.fun) + " / " + STOPS;
+
+    const need = [];
+    const left = Math.max(0, TASKS_NEEDED - t.tasks);
+    if(left) need.push(left + (left === 1 ? " task" : " tasks"));
+    if(!t.workout) need.push("a workout");
+    if(!t.fun) need.push("something fun");
+    $("sub").textContent = top ? (t.tasks > TASKS_NEEDED ? "山頂 reached, and still going. " + t.tasks + " tasks today." : "山頂 reached. You made it up the Peak today.")
+      : (t.tasks + t.workout + t.fun === 0) ? "5 tasks, 1 workout and 1 fun thing to reach the top"
+      : (c === STOPS - 1 && !(t.workout && t.fun)) ? "One step from the top. Need " + need.filter(x => !/task/.test(x)).join(" and ") + " to summit"
+      : "Still need " + need.join(" · ");
+
+    $("undo").disabled = t.tasks === 0;
+    $("workBtn").setAttribute("aria-pressed", String(t.workout));
+    $("workLabel").textContent = t.workout ? "Workout ✓" : "Workout";
+    $("funBtn").setAttribute("aria-pressed", String(t.fun));
+    $("funLabel").textContent = t.fun ? "Fun ✓" : "Fun";
+
+    const wk = weekKeys(), tk = todayKey(), letters = ["M","T","W","T","F","S","S"];
+    let tops = 0, works = 0, funs = 0; $("week").innerHTML = "";
+    wk.forEach((k,i)=>{
+      const d = get(k); if(d.workout) works++; if(d.fun) funs++; if(summited(d)) tops++;
+      const el = document.createElement("div"); el.className = "day" + (k===tk ? " today":"");
+      const trio = document.createElement("div"); trio.className = "trio";
+      [["top", summited(d)], ["work", d.workout], ["fun", d.fun]].forEach(([cls,on])=>{
+        const s = document.createElement("span"); s.className = "dot" + (on ? " " + cls : ""); trio.append(s);
+      });
+      const l = document.createElement("span"); l.textContent = letters[i];
+      el.append(trio,l); $("week").append(el);
+    });
+    $("tops").textContent = tops;
+    $("works").textContent = works + " / " + WORK_GOAL; $("works").classList.toggle("hit", works >= WORK_GOAL);
+    $("funs").textContent = funs + " / " + FUN_GOAL; $("funs").classList.toggle("hit", funs >= FUN_GOAL);
+  }
+
+  function saveLocal(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(days)); }catch(e){} }
+  function loadLocal(){ try{ Object.assign(days, JSON.parse(localStorage.getItem(LS_KEY) || "{}")); }catch(e){} }
+  let writing = Promise.resolve();
+  function persist(k){
+    saveLocal();
+    if(!col) return;
+    const body = get(k);
+    writing = writing.then(()=>col.doc(k).set(body)).catch(err=>{
+      $("note").textContent = err && err.code === "quota_exceeded" ? "Storage is full, so new days aren't saving." : "Couldn't save just now. Your tap is kept on this device.";
+    });
+  }
+
+  const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  function burst(el, color, n){
+    if(reduce) return;
+    const r = el.getBoundingClientRect(), cx = r.left + r.width/2, cy = r.top + r.height/2;
+    for(let i=0;i<n;i++){
+      const s = document.createElement("span"); s.className="spark"; s.style.background = color;
+      s.style.left = cx+"px"; s.style.top = cy+"px"; document.body.append(s);
+      const a = Math.random()*Math.PI*2, dist = Math.max(r.width,40)*0.5 + Math.random()*40;
+      s.animate([{transform:"translate(-50%,-50%) scale(1)",opacity:1},
+                 {transform:`translate(calc(-50% + ${Math.cos(a)*dist}px), calc(-50% + ${Math.sin(a)*dist}px)) scale(.3)`,opacity:0}],
+                {duration:650+Math.random()*250,easing:"cubic-bezier(.2,.7,.3,1)"}).onfinish = ()=>s.remove();
+    }
+  }
+  function bump(){ const n=$("count"); n.classList.remove("bump"); void n.offsetWidth; n.classList.add("bump"); }
+  function maybeSummit(before, after){
+    if(!summited(before) && summited(after)) setTimeout(()=>{
+      burst($("flag"), cssVar("--red"), 20); burst($("flag"), cssVar("--window"), 14); burst($("flag"), cssVar("--pink"), 12);
+    }, 600);
+  }
+  function change(fn, btn, color){
+    const k = todayKey(), before = get(k), after = fn({...before});
+    days[k] = after; persist(k); render(true); bump();
+    if(btn) burst(btn, cssVar(color), 12);
+    maybeSummit(before, after);
+  }
+
+  $("taskBtn").addEventListener("click", ()=>change(d=>{d.tasks+=1; return d;}, $("taskBtn"), "--red"));
+  $("workBtn").addEventListener("click", ()=>{ const on = !get(todayKey()).workout; change(d=>{d.workout=on; return d;}, on ? $("workBtn") : null, "--jade"); });
+  $("funBtn").addEventListener("click", ()=>{ const on = !get(todayKey()).fun; change(d=>{d.fun=on; return d;}, on ? $("funBtn") : null, "--pink"); });
+  $("undo").addEventListener("click", ()=>{ if(get(todayKey()).tasks>0) change(d=>{d.tasks-=1; return d;}, null); });
+
+  loadLocal(); render(false);
+  let lastDay = todayKey();
+  setInterval(()=>{ if(todayKey()!==lastDay){ lastDay = todayKey(); render(false); } }, 60000);
+
+  
+})();
+</script>
+</body></html>
