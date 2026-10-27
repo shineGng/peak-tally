@@ -90,6 +90,15 @@ body{background:var(--bg);color:var(--ink);font-family:var(--display);
 .spark{position:fixed;width:8px;height:8px;border-radius:50%;pointer-events:none;z-index:5}
 .ask{font-weight:700;font-size:.9rem;color:var(--ink);min-height:1.2em;opacity:0;transform:translateY(4px);transition:opacity .3s ease,transform .3s ease}
 .ask.show{opacity:1;transform:none}
+.sheet{position:fixed;inset:0;background:rgba(10,6,12,.55);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding:12px}
+.sheet-card{background:var(--bg);color:var(--ink);width:100%;max-width:520px;border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);animation:up .28s cubic-bezier(.2,.8,.3,1)}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;font-size:1.05rem}
+.sheet-x{background:none;border:0;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:4px 8px;border-radius:8px}
+.sheet-x:hover{color:var(--ink)}
+.sheet-hint{margin:0;color:var(--muted);font-size:.85rem;text-align:left}
+#sheetForm{width:100%;height:min(420px,60vh);border:0;border-radius:12px;background:#fff}
+.sheet-open{color:var(--muted);font-size:.78rem;text-align:center}
+@keyframes up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
 .note{color:var(--muted);font-size:.72rem;min-height:1em}
 
 @keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
@@ -240,6 +249,17 @@ body{padding-block:4px}
     <span><i class="key" style="background:var(--pink)"></i><b id="funs">0 / 7</b> fun</span>
   </div>
   <div class="ask" id="ask" aria-live="polite"></div>
+  <div class="sheet" id="sheet" hidden>
+    <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <div class="sheet-head">
+        <b id="sheetTitle">What did you do?</b>
+        <button class="sheet-x" id="sheetX" type="button" aria-label="Close">✕</button>
+      </div>
+      <p class="sheet-hint" id="sheetHint"></p>
+      <iframe id="sheetForm" title="Log it" loading="lazy"></iframe>
+      <a class="sheet-open" id="sheetOpen" href="https://app.notion.com/p/5bfcb10949dd4ef18ee1e693e91ba302?v=406fed941fec81fa8cee000c664d1423" target="_blank" rel="noopener">Form not showing? Open it here →</a>
+    </div>
+  </div>
   <div class="note" id="note"></div>
 </div>
 
@@ -380,7 +400,20 @@ body{padding-block:4px}
   $("taskBtn").addEventListener("click", ()=>change(d=>{d.tasks+=1; return d;}, $("taskBtn"), "--red"));
   $("workBtn").addEventListener("click", ()=>{ const on = !get(todayKey()).workout; change(d=>{d.workout=on; return d;}, on ? $("workBtn") : null, "--jade"); askLog(on, "Workout done. Log what you did and how long, just below ↓"); });
   $("funBtn").addEventListener("click", ()=>{ const on = !get(todayKey()).fun; change(d=>{d.fun=on; return d;}, on ? $("funBtn") : null, "--pink"); askLog(on, "Nice. Log what you did for fun, just below ↓"); });
-  function askLog(on, msg){ const n=$("ask"); n.textContent = on ? msg : ""; n.classList.toggle("show", on); }
+  const FORM_URL = "https://app.notion.com/p/5bfcb10949dd4ef18ee1e693e91ba302?v=406fed941fec81fa8cee000c664d1423";
+  function askLog(on, msg){
+    $("ask").textContent = ""; $("ask").classList.remove("show");
+    if(!on) return;
+    const work = /Workout/.test(msg);
+    $("sheetTitle").textContent = work ? "What was your workout?" : "What did you do for fun?";
+    $("sheetHint").textContent = work ? "Pick Workout, say what you did and how many minutes, then Submit." : "Pick Fun, say what you did (cheesecake counts), then Submit.";
+    const f = $("sheetForm"); if(f.getAttribute("src") !== FORM_URL) f.setAttribute("src", FORM_URL);
+    setTimeout(()=>{ $("sheet").hidden = false; $("sheetX").focus(); }, 700);
+  }
+  function closeSheet(){ $("sheet").hidden = true; }
+  $("sheetX").addEventListener("click", closeSheet);
+  $("sheet").addEventListener("click", e=>{ if(e.target === $("sheet")) closeSheet(); });
+  document.addEventListener("keydown", e=>{ if(e.key === "Escape") closeSheet(); });
   $("undo").addEventListener("click", ()=>{ if(get(todayKey()).tasks>0) change(d=>{d.tasks-=1; return d;}, null); });
 
   loadLocal(); render(false);
